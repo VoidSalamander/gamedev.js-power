@@ -1,5 +1,5 @@
-import Cards from "./card.js";
-class Example extends Phaser.Scene {
+import Cards from "./test_card.js";
+class main extends Phaser.Scene {
     constructor() {
         super();
     }
@@ -13,8 +13,22 @@ class Example extends Phaser.Scene {
   
     create() {
         this.add.image(400, 300, 'bg');
-        const cards = new Cards(this);
-        cards.createCards('cards');
+        const frames = this.textures.get('cards').getFrameNames();
+        this.cards = [];
+
+        for (var i = 0; i < 16; i++) {
+            const temp = new Cards(this, 'cards', Phaser.Math.RND.pick(frames));
+            this.cards.push(temp);
+            this.add.existing(temp);
+        }
+        Phaser.Actions.GridAlign(this.cards, {
+            width: 8,
+            height: 2,
+            cellWidth: 80,
+            cellHeight: 220,
+            x: 50,
+            y: 80,
+        });
     }
 
     handleButtonClick() {
@@ -28,14 +42,13 @@ class Example extends Phaser.Scene {
 
   }
 
-
 const config = {
     type: Phaser.AUTO,
     width: 800,
     height: 600,
     backgroundColor: '#2d2d2d',
     parent: 'phaser-example',
-    scene: Example
+    scene: main
 };
 
 const game = new Phaser.Game(config);

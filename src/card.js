@@ -4,7 +4,7 @@ class Cards {
         this.cards = [];
         this.isSelected = {};
     }
-    createCards(texture, frames) {
+    createCards() {
         // Get card frames (if not provided as arguments)
         if (!frames) {
           frames = this.scene.textures.get(texture).getFrameNames();
