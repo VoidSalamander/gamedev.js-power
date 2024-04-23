@@ -21,7 +21,6 @@ class Cards extends Phaser.GameObjects.Sprite {
     }
 
     handleCardClick() {
-      console.log(this.frame.name);
       this.isSelected = !this.isSelected;
       if (this.isSelected) {
         this.y -= 15;

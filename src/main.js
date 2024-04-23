@@ -15,28 +15,34 @@ class main extends Phaser.Scene {
         this.add.image(400, 300, 'bg');
         const frames = this.textures.get('cards').getFrameNames();
         this.deck = [];
+        this.handcards = [];
 
-        for (var i = 0; i < 16; i++) {
-            const temp = new Cards(this, 'cards', Phaser.Math.RND.pick(frames));
+        for(var i = 0; i < 53; i++) {
+            const temp = new Cards(this, 'cards', frames[i]);
             this.deck.push(temp);
-            this.add.existing(temp);
         }
 
+        for (var i = 0; i < 16; i++) {
+            const temp = Phaser.Math.RND.pick(this.deck);
+            removeItemOnce(this.deck, temp)
+            this.handcards.push(temp);
+            this.add.existing(temp);
+        }
+        
         const destroybutton = this.add.image(700, 550, 'buttonImage');
         destroybutton.setInteractive();
         destroybutton.on('pointerdown', () => {
-
-            this.deck.filter(card => card.isSelected).forEach(card => card.destroy());
-            this.deck = this.deck.filter(card => !card.isSelected);
+            this.handcards.filter(card => card.isSelected).forEach(card => card.destroy());
+            this.handcards = this.handcards.filter(card => !card.isSelected);
             
           }, this);
 
         const addButton = this.add.image(600, 550, 'addButton'); // Add add button
         addButton.setInteractive();
-        addButton.on('pointerdown', this.addCard, this); // Bind addCard function
+        addButton.on('pointerdown', this.drawCard, this); // Bind addCard function
       
 
-        Phaser.Actions.GridAlign(this.deck, {
+        Phaser.Actions.GridAlign(this.handcards, {
             width: 8,
             height: 2,
             cellWidth: 80,
@@ -46,28 +52,37 @@ class main extends Phaser.Scene {
         });
     }
 
-    addCard() {
-        // Check if there's an empty slot in the deck
-        if (this.deck.length < 16) {
-          const frames = this.textures.get('cards').getFrameNames();
-          const newCard = new Cards(this, 'cards', Phaser.Math.RND.pick(frames));
-          this.deck.push(newCard);
-          this.add.existing(newCard);
-          this.deck.forEach(card => card.isSelected = false);
-          // Update grid alignment to accommodate the new card
-          Phaser.Actions.GridAlign(this.deck, {
-            width: 8,
-            height: 2,
-            cellWidth: 80,
-            cellHeight: 220,
-            x: 50,
-            y: 80,
-          });
+    drawCard() {
+        if (this.handcards.length < 16) {
+            const temp = Phaser.Math.RND.pick(this.deck);
+            removeItemOnce(this.deck, temp)
+            this.handcards.push(temp);
+            this.add.existing(temp);
+            this.handcards.forEach(card => card.isSelected = false);
+
+            console.log(this.deck.length)
+            Phaser.Actions.GridAlign(this.handcards, {
+                width: 8,
+                height: 2,
+                cellWidth: 80,
+                cellHeight: 220,
+                x: 50,
+                y: 80,
+            });
         } else {
-          console.warn('Deck is full! Cannot add more cards.'); // Handle full deck scenario (optional)
+            console.warn('Deck is full! Cannot add more cards.'); // Handle full deck scenario (optional)
         }
     }
 }
+
+function removeItemOnce(arr, value) {
+    var index = arr.indexOf(value);
+    if (index > -1) {
+      arr.splice(index, 1);
+    }
+    return arr;
+  }
+  
 
 const config = {
     type: Phaser.AUTO,
