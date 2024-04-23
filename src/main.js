@@ -15,26 +15,20 @@ class main extends Phaser.Scene {
         this.add.image(400, 300, 'bg');
         const frames = this.textures.get('cards').getFrameNames();
         
-        this.handcards = [];
-        this.deck = new Deck(this, frames)
         
-        for (var i = 0; i < 16; i++) {
-            const temp = this.deck.drawCard();
-            this.handcards.push(temp);
-            this.add.existing(temp);
-        }
+        this.deck = new Deck(this, frames)
+        this.handCard = new HandCard(this, this.deck)
         
         const destroybutton = this.add.image(700, 550, 'buttonImage');
         destroybutton.setInteractive();
         destroybutton.on('pointerdown', () => {
-            this.handcards.filter(card => card.isSelected).forEach(card => card.destroy());
-            this.handcards = this.handcards.filter(card => !card.isSelected);
+            this.handCard.playCard()
             this.text.setText("delete card");
         }, this);
 
         const addButton = this.add.image(600, 550, 'addButton');
         addButton.setInteractive();
-        addButton.on('pointerdown', this.drawCard, this);
+        addButton.on('pointerdown', this.handCard.getCard, this);
       
         this.text = new Phaser.GameObjects.Text(this, 100, 550, "This is my text", {
             font: "42px monospace",
@@ -42,8 +36,22 @@ class main extends Phaser.Scene {
             align: "center"
         });
         this.add.existing(this.text);
+    }
+}
 
-        Phaser.Actions.GridAlign(this.handcards, {
+class HandCard {
+    
+    constructor(Scene, deck){
+        this.handCards = [];
+        this.maximumCards = 16;
+        for (var i = 0; i < this.maximumCards; i++) {
+            this.deck = deck;
+            this.Scene = Scene;
+            const temp = this.deck.drawCard();
+            this.handCards.push(temp);
+            this.Scene.add.existing(temp);
+        }
+        Phaser.Actions.GridAlign(this.handCards, {
             width: 8,
             height: 2,
             cellWidth: 80,
@@ -53,16 +61,14 @@ class main extends Phaser.Scene {
         });
     }
 
-    drawCard() {
-        if (this.handcards.length < 16) {
+    getCard(){
+        console.log(this.handCards.length)
+        if (this.handCards.length < this.maximumCards) {
             const temp = this.deck.drawCard();
-            this.handcards.push(temp);
-            this.add.existing(temp);
-            this.handcards.forEach(card => card.isSelected = false);
-
-            console.log(temp.name)
-            this.text.setText("draw " + temp.name)
-            Phaser.Actions.GridAlign(this.handcards, {
+            this.handCards.push(temp);
+            this.Scene.add.existing(temp);
+            this.handCards.forEach(card => card.isSelected = false);
+            Phaser.Actions.GridAlign(this.handCards, {
                 width: 8,
                 height: 2,
                 cellWidth: 80,
@@ -70,18 +76,15 @@ class main extends Phaser.Scene {
                 x: 50,
                 y: 80,
             });
-        } else {
-            console.warn('Deck is full! Cannot add more cards.'); // Handle full deck scenario (optional)
+        }else {
+            console.warn('Deck is full! Cannot add more cards.');
         }
     }
-}
 
-class HandCard {
-    constructor(){
-
+    playCard(){
+        this.handCards.filter(card => card.isSelected).forEach(card => card.destroy());
+        this.handCards = this.handCards.filter(card => !card.isSelected);
     }
-
-
 }
 
 const config = {
