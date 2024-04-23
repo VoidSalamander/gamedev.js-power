@@ -48,5 +48,35 @@ class Cards extends Phaser.GameObjects.Sprite {
       
     cardvalue
   }
+
   
-  export default Cards;
+class Deck{
+    deck = [];
+    constructor(scene, frames){
+        for(var i = 1; i < frames.length-1; i++) {
+            const temp = new Cards(scene, 'cards', frames[i]);
+            this.deck.push(temp);
+        }
+    }
+
+    drawCard(){
+        if(!this.deck.length){
+            console.warn("deck empty")
+            return null
+        } else {
+            const temp = Phaser.Math.RND.pick(this.deck);
+            removeItemOnce(this.deck, temp)
+            return temp
+        }
+    }
+}
+
+function removeItemOnce(arr, value) {
+  var index = arr.indexOf(value);
+  if (index > -1) {
+    arr.splice(index, 1);
+  }
+  return arr;
+}
+  
+  export default Deck;

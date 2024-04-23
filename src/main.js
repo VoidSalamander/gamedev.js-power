@@ -1,4 +1,4 @@
-import Cards from "./card.js";
+import Deck from "./card.js";
 class main extends Phaser.Scene {
     constructor() {
         super();
@@ -14,17 +14,12 @@ class main extends Phaser.Scene {
     create() {
         this.add.image(400, 300, 'bg');
         const frames = this.textures.get('cards').getFrameNames();
-        this.deck = [];
+        
         this.handcards = [];
-
-        for(var i = 1; i < frames.length-1; i++) {
-            const temp = new Cards(this, 'cards', frames[i]);
-            this.deck.push(temp);
-        }
-
+        this.deck = new Deck(this, frames)
+        
         for (var i = 0; i < 16; i++) {
-            const temp = Phaser.Math.RND.pick(this.deck);
-            removeItemOnce(this.deck, temp)
+            const temp = this.deck.drawCard();
             this.handcards.push(temp);
             this.add.existing(temp);
         }
@@ -35,7 +30,7 @@ class main extends Phaser.Scene {
             this.handcards.filter(card => card.isSelected).forEach(card => card.destroy());
             this.handcards = this.handcards.filter(card => !card.isSelected);
             this.text.setText("delete card");
-          }, this);
+        }, this);
 
         const addButton = this.add.image(600, 550, 'addButton');
         addButton.setInteractive();
@@ -59,13 +54,8 @@ class main extends Phaser.Scene {
     }
 
     drawCard() {
-        if(!this.deck.length){
-            this.text.setText("deck empty")
-            return
-        }
-        else if (this.handcards.length < 16) {
-            const temp = Phaser.Math.RND.pick(this.deck);
-            removeItemOnce(this.deck, temp)
+        if (this.handcards.length < 16) {
+            const temp = this.deck.drawCard();
             this.handcards.push(temp);
             this.add.existing(temp);
             this.handcards.forEach(card => card.isSelected = false);
@@ -86,55 +76,13 @@ class main extends Phaser.Scene {
     }
 }
 
-class Deck {
-    deckPile = [];
-    handSlot = [];
-    selectedSlot = [];
-    discardPile = [];
-    
-    maximumSlot = 8;
-    maximumSelected = 5;
+class HandCard {
+    constructor(){
 
-    constructor() {
-        super();
-    }
-
-    drawCard(){
-        if(!this.deck.length){
-            return "deck empty"
-        } else if (this.handcards.length < 16) {
-            const temp = Phaser.Math.RND.pick(this.deck);
-            removeItemOnce(this.deck, temp)
-            this.handcards.push(temp);
-            this.add.existing(temp);
-            this.handcards.forEach(card => card.isSelected = false);
-
-            console.log(temp.name)
-            this.text.setText("draw " + temp.name)
-            Phaser.Actions.GridAlign(this.handcards, {
-                width: 8,
-                height: 2,
-                cellWidth: 80,
-                cellHeight: 220,
-                x: 50,
-                y: 80,
-            });
-        } else {
-            console.warn('Deck is full! Cannot add more cards.'); // Handle full deck scenario (optional)
-        }
     }
 
 
 }
-
-function removeItemOnce(arr, value) {
-    var index = arr.indexOf(value);
-    if (index > -1) {
-      arr.splice(index, 1);
-    }
-    return arr;
-  }
-  
 
 const config = {
     type: Phaser.AUTO,
