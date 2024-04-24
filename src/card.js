@@ -71,6 +71,53 @@ class Deck{
     }
 }
 
+class HandCard {
+  constructor(Scene, deck){
+      this.handCards = [];
+      this.maximumCards = 16;
+      for (var i = 0; i < this.maximumCards; i++) {
+          this.deck = deck;
+          this.Scene = Scene;
+          const temp = this.deck.drawCard();
+          this.handCards.push(temp);
+          this.Scene.add.existing(temp);
+      }
+      Phaser.Actions.GridAlign(this.handCards, {
+          width: 8,
+          height: 2,
+          cellWidth: 80,
+          cellHeight: 220,
+          x: 50,
+          y: 80,
+      });
+  }
+
+  getCard = () => {
+      if (this.handCards.length < this.maximumCards) {
+          const temp = this.deck.drawCard();
+          this.handCards.push(temp);
+          this.Scene.add.existing(temp);
+          this.handCards.forEach(card => card.isSelected = false);
+          Phaser.Actions.GridAlign(this.handCards, {
+              width: 8,
+              height: 2,
+              cellWidth: 80,
+              cellHeight: 220,
+              x: 50,
+              y: 80,
+          });
+      }else {
+          console.warn('Deck is full! Cannot add more cards.');
+      }
+  }
+
+  playCard(){
+      this.handCards.filter(card => card.isSelected).forEach(card => card.destroy());
+      this.handCards = this.handCards.filter(card => !card.isSelected);
+  }
+}
+
+
 function removeItemOnce(arr, value) {
   var index = arr.indexOf(value);
   if (index > -1) {
@@ -79,4 +126,4 @@ function removeItemOnce(arr, value) {
   return arr;
 }
   
-  export default Deck;
+export { Deck, HandCard };
