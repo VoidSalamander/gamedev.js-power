@@ -5,39 +5,32 @@ class main extends Phaser.Scene {
   }
 
   preload() {
-    
     this.load.setBaseURL("../assets/");
-    this.load.atlas(
-      "cards",
-      "carddata.png",
-      "carddata.json"
-    );
-    this.load.atlas(
-      "icons",
-      "icondata.png",
-      "icondata.json"
-    );
+    this.load.image("buttonImage", "playbutton.png");
+    this.load.atlas("cards", "carddata.png", "carddata.json");
+    this.load.atlas("icons", "icondata.png", "icondata.json");
   }
 
   create() {
     const frames = this.textures.get("cards").getFrameNames();
     this.cardSelected = 0;
 
-
     this.maingame = new maingame(this, frames);
 
-    const destroybutton = this.add.image(850, 500, "buttonImage");
+    const destroybutton = this.add.image(880, 580, "buttonImage");
     destroybutton.setInteractive();
     destroybutton.on(
       "pointerdown",
       () => {
-        this.currentSetText.setText(this.maingame.handleplaycard())
+        if (this.cardSelected != 0) {
+          this.currentSetText.setText(this.maingame.handleplaycard());
+        }
       },
       this
     );
-    
+
     /*state board*/
-    this.currentSetText = this.add.text(50, 50, "Hello World", {
+    this.currentSetText = this.add.text(50, 50, "Made by VoidSalamander", {
       font: "24px Arial",
       fill: "#ffffff",
     });
@@ -50,55 +43,73 @@ class main extends Phaser.Scene {
       fill: "#ffffff",
     });
 
-    /*building board*/
-    this.buildingLevelText = [];
-    for(var i=0;i<8;i++){
-      this.buildingLevelText[i] = this.add.text(300, 50+i*30, this.maingame.BuildingList[i] + ": " + this.maingame.BuildingLevel.get(this.maingame.BuildingList[i]), {
-        font: "24px Arial",
-        fill: "#ffffff",
-      });
-    }
-
     /*resource board*/
     this.ResourceText = [];
-    for(var i=0;i<7;i++){
-      this.ResourceText[i] = this.add.text(50, 160+i*30, this.maingame.ResourceList[i] + ": " + this.maingame.Resource.get(this.maingame.ResourceList[i]), {
+    for (var i = 0; i < 7; i++) {
+      this.ResourceText[i] = this.add.text(
+        50,
+        160 + i * 30,
+        "Lv." +
+          this.maingame.BuildingLevel.get(this.maingame.ResourceList[i]) +
+          " " +
+          this.maingame.ResourceList[i] +
+          ": " +
+          this.maingame.Resource.get(this.maingame.ResourceList[i]),
+        {
+          font: "24px Arial",
+          fill: "#ffffff",
+        }
+      );
+    }
+
+    this.mainText = [];
+    for (var i = 0; i < 2; i++) {
+      this.mainText[i] = this.add.text(50, 400 + i * 30, "HHH", {
         font: "24px Arial",
         fill: "#ffffff",
       });
     }
+    this.HandlemainText(
+      "Thank you for playing this simple card game.",
+      "Play four of a kind to achieve the first milestone."
+    );
+  }
 
+  HandlemainText(str1, str2) {
+    this.mainText[0].setText(str1);
+    this.mainText[1].setText(str2);
+  }
+
+  HandleResourceText() {
+    for (var i = 0; i < 7; i++) {
+      this.ResourceText[i].setText(
+        "Lv." +
+          this.maingame.BuildingLevel.get(this.maingame.ResourceList[i]) +
+          " " +
+          this.maingame.ResourceList[i] +
+          ": " +
+          this.maingame.Resource.get(this.maingame.ResourceList[i])
+      );
+    }
   }
 }
 
-class maingame{
-  constructor(Scene, frames){
-
+class maingame {
+  constructor(Scene, frames) {
     this.current_level = 1;
     this.DisasterCount = 0;
     this.DisasterMaximum = 5;
 
     /*Building*/
     this.BuildingLevel = new Map([
-      ["Barracks", 0],
-      ["Laboratory", 0],
-      ["Church", 0],
-      ["Farmland", 0],
-      ["Crystal", 0],
-      ["City", 0],
-      ["Quarry", 0],
-      ["Lumberyard", 0],
+      ["wood", 0],
+      ["stone", 0],
+      ["food", 0],
+      ["people", 0],
+      ["crystal", 0],
+      ["force", 0],
+      ["belief", 0],
     ]);
-    this.BuildingList = [
-      "Barracks",
-      "Laboratory",
-      "Church",
-      "Farmland",
-      "Crystal",
-      "City",
-      "Quarry",
-      "Lumberyard",
-    ]
     /*Building End*/
 
     /*resource*/
@@ -119,44 +130,48 @@ class maingame{
       "crystal",
       "force",
       "belief",
-    ]
+    ];
     /*resource*/
 
     this.deck = new Deck(Scene, frames);
     this.handCard = new HandCard(Scene, this.deck);
-    this.Scene = Scene
+    this.Scene = Scene;
   }
 
-  handleplaycard(){
-
+  handleplaycard() {
     /*Disater*/
     this.DisasterCount++;
-    if (this.DisasterCount === this.DisasterMaximum){
-      this.getNewCard("disaster" ,this.current_level);
+    if (this.DisasterCount === this.DisasterMaximum) {
+      this.getNewCard("disaster", this.current_level);
       this.DisasterCount = 0;
     }
-    this.Scene.DisasterCountText.setText("Disaster: " + this.DisasterCount + "/" + this.DisasterMaximum)
+    this.Scene.DisasterCountText.setText(
+      "Disaster: " + this.DisasterCount + "/" + this.DisasterMaximum
+    );
     /*Disater End*/
-
-    
 
     const selectCard = this.handCard.playCard();
     const numCards = selectCard.length;
     selectCard.sort((a, b) => a.face - b.face);
-    const isFlush = selectCard.every(card => card.suit === selectCard[0].suit);
-    const faceValues = selectCard.map(card => card.face);
+    const isFlush = selectCard.every(
+      (card) => card.suit === selectCard[0].suit
+    );
+    const faceValues = selectCard.map((card) => card.face);
     const uniqueFaceValues = new Set(faceValues);
 
     // 判斷是否為同花順
     const isStraightFlush = isFlush && isConsecutive(faceValues);
 
     // 判斷是否為四條
-    const isFourOfAKind = (uniqueFaceValues.size == 1) && (numCards >= 4);
+    const isFourOfAKind = uniqueFaceValues.size == 1 && numCards >= 4;
 
     // 判斷是否為葫蘆
-    const isFullHouse = uniqueFaceValues.size === 2 &&
-        ((faceValues[0] === faceValues[2] && faceValues[numCards - 2] === faceValues[numCards - 1]) ||
-            (faceValues[0] === faceValues[1] && faceValues[numCards - 3] === faceValues[numCards - 1]));
+    const isFullHouse =
+      uniqueFaceValues.size === 2 &&
+      ((faceValues[0] === faceValues[2] &&
+        faceValues[numCards - 2] === faceValues[numCards - 1]) ||
+        (faceValues[0] === faceValues[1] &&
+          faceValues[numCards - 3] === faceValues[numCards - 1]));
 
     // 判斷是否為同花
     const isFlushOnly = isFlush && !isConsecutive(faceValues);
@@ -165,9 +180,11 @@ class maingame{
     const isStraightOnly = !isFlush && isConsecutive(faceValues);
 
     // 判斷是否為三條
-    const isThreeOfAKind = uniqueFaceValues.size === numCards - 2 &&
-        (faceValues[0] === faceValues[2] || faceValues[1] === faceValues[3] ||
-            faceValues[numCards - 3] === faceValues[numCards - 1]);
+    const isThreeOfAKind =
+      uniqueFaceValues.size === numCards - 2 &&
+      (faceValues[0] === faceValues[2] ||
+        faceValues[1] === faceValues[3] ||
+        faceValues[numCards - 3] === faceValues[numCards - 1]);
 
     // 判斷是否為兩對
     const isTwoPair = uniqueFaceValues.size === numCards - 2 && !isThreeOfAKind;
@@ -176,100 +193,196 @@ class maingame{
     const isOnePair = uniqueFaceValues.size === numCards - 3;
 
     if (isStraightFlush) {
-        return "Straight Flush";
+      return "Straight Flush";
     } else if (isFourOfAKind) {
-        this.HandleFourOfAKind(selectCard[0]);
-        return "Four of a Kind";
+      this.Scene.HandlemainText(
+        "Four Of A Kind!!",
+        "You'll get four advanced basic cards and select one power to develop"
+      );
+      this.HandleFourOfAKind(selectCard[0]);
+      return "Four of a Kind";
     } else if (isFullHouse) {
-        this.HandleFullHouse(selectCard);
-        return "Full House";
+      this.Scene.HandlemainText(
+        "FullHouse!!",
+        "You can upgrade one type of card."
+      );
+      this.HandleFullHouse(selectCard);
+      return "Full House";
     } else if (isFlushOnly) {
-        return "Flush";
+      this.Scene.HandlemainText(
+        "Flush!",
+        "You can obtain all the resources and advanced cards."
+      );
+      this.HandleFlush(selectCard);
+      return "Flush";
     } else if (isStraightOnly) {
-        return "Straight";
+      this.Scene.HandlemainText(
+        "Straight!",
+        "You can obtain all the resources"
+      );
+      HandleStraight(selectCard);
+      return "Straight";
     } else if (isThreeOfAKind) {
-        return "Three of a Kind";
+      return "Three of a Kind";
     } else if (isTwoPair) {
-        return "Two Pair";
+      return "Two Pair";
     } else if (isOnePair) {
-        return "One Pair";
+      return "One Pair";
     } else {
-        return "High Card";
+      return "High Card";
     }
   }
 
-  refillhand(){
+  refillhand() {
     this.handCard.refillhand();
   }
 
-  getNewCard(suit, face){
-    const suitsname = [
-      "research",
-      "wood",
-      "crystal",
-      "force",
-      "food",
-      "belief",
-      "people",
-      "stone",
-      "disaster",
-    ]
-    if (!suitsname.includes(suit) || face < 1 || face > 13) {
-      console.warn("Invalid suit or face value");
-    }
-    const suitIndex = suitsname.indexOf(suit);
-    this.deck.createCard((suitIndex * 13) + (face - 1))
+  getNewCard(suit, face) {
+    this.deck.createCard(getCardframe(suit, face));
   }
 
-  HandleFourOfAKind(card){
-    if (card.face >= this.current_level){
+  HandleFourOfAKind(card) {
+    this.Scene.scene.add(
+      "NewScene",
+      new NewScene(this.Scene, this, card.face, "getcard"),
+      this
+    );
+    if (card.face >= this.current_level) {
       this.current_level++;
-      this.Scene.currentLevelText.setText("Current Level: " + this.current_level)
-      this.getNewCard("people" ,this.current_level);
-      this.getNewCard("crystal" ,this.current_level);
-      this.getNewCard("food" ,this.current_level);
-      if(this.current_level %2 === 0){
-        this.getNewCard("wood" ,this.current_level);
-      }else{
-        this.getNewCard("stone" ,this.current_level);
+      this.Scene.currentLevelText.setText(
+        "Current Level: " + this.current_level
+      );
+      this.getNewCard("people", this.current_level);
+      this.getNewCard("crystal", this.current_level);
+      this.getNewCard("food", this.current_level);
+      if (this.current_level % 2 === 0) {
+        this.getNewCard("wood", this.current_level);
+      } else {
+        this.getNewCard("stone", this.current_level);
       }
     }
-
   }
 
-  HandleFullHouse(selectCard){
-    this.Scene.scene.add('NewScene',new NewScene(selectCard), this);
+  HandleFullHouse(selectCard) {
+    this.Scene.scene.add(
+      "NewScene",
+      new NewScene(this.Scene, this, selectCard, "upgrade"),
+      this
+    );
   }
-  
+
+  HandleFlush(selectCard) {
+    selectCard.forEach((card) => {
+      if (this.Resource.has(card.suit)) {
+        this.Resource.set(card.suit, this.Resource.get(card.suit) + card.face);
+      }
+    });
+    this.Scene.HandleResourceText();
+    this.getNewCard(selectCard[0].suit, this.current_level + 1);
+  }
+
+  HandleStraight(selectCard) {
+    selectCard.forEach((card) => {
+      if (this.Resource.has(card.suit)) {
+        this.Resource.set(card.suit, this.Resource.get(card.suit) + card.face);
+      }
+    });
+    this.Scene.HandleResourceText();
+  }
 }
 
+/**
+ * Type:upgrade, getcard
+ *
+ */
+
 class NewScene extends Phaser.Scene {
-  constructor(selectCard) {
-    super({ key: 'NewScene' });
-    this.selectCard = selectCard
+  constructor(Scene, maingame, selectCard, type) {
+    super({ key: "NewScene" });
+    this.selectCard = selectCard;
+    this.Scene = Scene;
+    this.type = type;
+    this.maingame = maingame;
   }
 
   preload() {
     this.load.setBaseURL("../assets/");
-    this.load.atlas(
-      "cards",
-      "carddata.png",
-      "carddata.json"
-    );
+    this.load.atlas("cards", "carddata.png", "carddata.json");
   }
 
   create() {
     const frames = this.textures.get("cards").getFrameNames();
-    const buttonWidth = 130; // Assuming a consistent button width (adjust if needed)
-  
-    const buttons = [
-      this.add.image(610, 200, "cards", this.selectCard[0].name).setInteractive(),
-      this.add.image(740, 200, "cards", this.selectCard[1].name).setInteractive(),
-      this.add.image(870, 200, "cards", this.selectCard[2].name).setInteractive(),
+
+    const buttons = [];
+    const introText = this.add.text(570, 50, "", {
+      font: "36px Arial",
+      fill: "#ffffff",
+    });
+
+    if (this.type == "getcard") {
+      introText.setText("Choose one power");
+      buttons.push(
+        this.add
+          .image(
+            610,
+            200,
+            "cards",
+            frames[
+              frames.indexOf(
+                "Cards-" + getCardframe("force", this.selectCard) + ".png"
+              )
+            ]
+          )
+          .setInteractive(),
+        this.add
+          .image(
+            740,
+            200,
+            "cards",
+            frames[
+              frames.indexOf(
+                "Cards-" + getCardframe("belief", this.selectCard) + ".png"
+              )
+            ]
+          )
+          .setInteractive(),
+        this.add
+          .image(
+            870,
+            200,
+            "cards",
+            frames[
+              frames.indexOf(
+                "Cards-" + getCardframe("research", this.selectCard) + ".png"
+              )
+            ]
+          )
+          .setInteractive()
+      );
+    } else if (this.type == "upgrade") {
+      buttons.push(
+        this.add
+          .image(610, 200, "cards", this.selectCard[0].name)
+          .setInteractive(),
+        this.add
+          .image(740, 200, "cards", this.selectCard[1].name)
+          .setInteractive(),
+        this.add
+          .image(870, 200, "cards", this.selectCard[2].name)
+          .setInteractive()
+      );
+    }
+
+    const buttonindex = ["force", "belief", "research"];
+
+    const buttonindextext = [
+      "Increase military power to resist disasters",
+      "enhance power of belief for miracles to occur,",
+      "boost power of science to steadily become stronger",
     ];
-  
+
     buttons.forEach((button, index) => {
-      button.on('pointerdown', () => {
+      button.on("pointerdown", () => {
         buttons.forEach((btn, idx) => {
           if (idx === index) {
             // If the button is selected, scale it up and then destroy
@@ -279,11 +392,14 @@ class NewScene extends Phaser.Scene {
               scaleY: 1.2,
               alpha: 0,
               duration: 700,
-              ease: 'Power2',
+              ease: "Power2",
               onComplete: () => {
+                if (this.type == "getcard") {
+                  this.maingame.getNewCard(buttonindex[index], this.selectCard);
+                }
                 btn.destroy();
                 this.scene.remove();
-              }
+              },
             });
           } else {
             // If the button is not selected, simply destroy it
@@ -291,45 +407,39 @@ class NewScene extends Phaser.Scene {
           }
         });
       });
+
+      // Add hover effect
+      button.on("pointerover", () => {
+        this.tweens.add({
+          targets: button,
+          scaleX: 1.1,
+          scaleY: 1.1,
+          duration: 200,
+          ease: "Power2",
+          onStart: () => {
+            if (this.type == "getcard") {
+              this.Scene.HandlemainText(
+                buttonindex[index],
+                buttonindextext[index]
+              );
+            }
+          },
+        });
+      });
+
+      // Remove hover effect
+      button.on("pointerout", () => {
+        this.tweens.add({
+          targets: button,
+          scaleX: 1,
+          scaleY: 1,
+          duration: 200,
+          ease: "Power2",
+        });
+      });
     });
   }
 }
-
-/*
-class getNewThing extends Phaser.Scene {
-  constructor(cardA, cardB, cardC, onCardSelect) {
-    super();
-    this.cardA = cardA
-    this.cardB = cardB
-    this.cardC = cardC
-    this.onCardSelect = onCardSelect;
-  }
-
-  create() {
-    const Abutton = this.add.image(610, 200, "cards", frames[0]);
-    Abutton.setInteractive();
-    Abutton.on("pointerdown", () => this.onCardSelect());
-    
-    const Bbutton = this.add.image(740, 200, "cards", this.cardB.name);
-    Bbutton.setInteractive();
-    Bbutton.on(
-      "pointerdown",
-      () => {
-        this.Scene.scene.remove('gameScene');
-      },
-      this
-    );
-    const Cbutton = this.add.image(870, 200, "cards", this.cardC.name);
-    Cbutton.setInteractive();
-    Cbutton.on(
-      "pointerdown",
-      () => {
-        this.Scene.scene.remove('gameScene');
-      },
-      this
-    );
-  }
-}*/
 
 function isConsecutive(arr) {
   for (let i = 0; i < arr.length - 1; i++) {
@@ -340,6 +450,26 @@ function isConsecutive(arr) {
   return true;
 }
 
+function getCardframe(suit, face) {
+  const suitsname = [
+    "research",
+    "wood",
+    "crystal",
+    "force",
+    "food",
+    "belief",
+    "people",
+    "stone",
+    "disaster",
+  ];
+  if (!suitsname.includes(suit) || face < 1 || face > 13) {
+    console.warn("Invalid suit or face value");
+    return 0;
+  }
+  const suitIndex = suitsname.indexOf(suit);
+  return suitIndex * 13 + (face - 1);
+}
+
 const config = {
   type: Phaser.AUTO,
   width: 1000,
@@ -348,12 +478,12 @@ const config = {
   parent: "phaser-example",
   scene: main,
   physics: {
-    default: 'arcade',
+    default: "arcade",
     arcade: {
-        debug: false,
-        gravity: { y: 0 }
-    }
-  }
+      debug: false,
+      gravity: { y: 0 },
+    },
+  },
 };
 
 const game = new Phaser.Game(config);
