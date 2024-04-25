@@ -3,7 +3,25 @@ class Cards extends Phaser.GameObjects.Sprite {
     super(scene, 0, 0, frame, texture);
     this.isSelected = false;
     this.name = this.frame.name;
+    
+    const suitsname = [
+      "research",
+      "wood",
+      "fuel",
+      "force",
+      "food",
+      "belief",
+      "people",
+      "stone",
+      "disaster",
+    ]
 
+    let matches = this.name.match(/(\d+)/);
+    if (matches) {
+      const number = parseInt(matches[0]);
+      this.suit = suitsname[Math.floor(number / 13)]
+      this.face = number % 13 + 1
+    }
     this.setInteractive();
     this.on("pointerover", this.handleHover.bind(this));
     this.on("pointerout", this.handleHoverOut.bind(this));
@@ -24,12 +42,17 @@ class Cards extends Phaser.GameObjects.Sprite {
 
   handleCardClick() {
     this.isSelected = !this.isSelected;
-    console.log(this.suit + this.face)
-    if (this.isSelected) {
-      this.y -= 15;
-    } else {
+    if (!this.isSelected) {
       this.y += 15;
+      this.scene.cardSelected -= 1;
+    } else if(this.scene.cardSelected < 5){
+      this.y -= 15;
+      this.scene.cardSelected += 1;
+    } else {
+      this.isSelected =false
+      console.warn("you can't choose more than five cards")
     }
+    console.log(this.scene.cardSelected)
   }
 
   destroy() {
@@ -49,6 +72,7 @@ class Cards extends Phaser.GameObjects.Sprite {
 
 class Deck {
   deck = [];
+  discardpile = [];
   constructor(scene, frames) {
     for (var i = 1; i < frames.length - 1; i++) {
       const temp = new Cards(scene, "cards", frames[i]);
@@ -57,6 +81,9 @@ class Deck {
   }
 
   drawCard() {
+    if (!this.deck.length && this.discardpile.length) {
+      this.deck.push(discardpile);
+    } 
     if (!this.deck.length) {
       console.warn("deck empty");
       return null;
@@ -66,6 +93,9 @@ class Deck {
       return temp;
     }
   }
+  discard(discardcard) {
+    discardcard.forEach((card) => this.discardpile.push(card))
+  }
 }
 
 class HandCard {
@@ -73,7 +103,7 @@ class HandCard {
     this.Scene = Scene;
     this.handCards = [];
     this.maximumCards = 8;
-    this.HandCardPosY = 100;
+    this.HandCardPosY = 480;
     for (var i = 0; i < this.maximumCards; i++) {
       this.deck = deck;
       this.Scene = Scene;
@@ -84,9 +114,9 @@ class HandCard {
     Phaser.Actions.GridAlign(this.handCards, {
       width: this.maximumCards,
       height: 1,
-      cellWidth: 640/this.handCards.length,
+      cellWidth: 700/this.handCards.length,
       cellHeight: 220,
-      x: 50,
+      x: 25,
       y: this.HandCardPosY,
     });
   }
@@ -106,7 +136,7 @@ class HandCard {
         y: this.HandCardPosY,
       });
     } else {
-      console.warn("Deck is full! Cannot add more cards.");
+      console.warn("HandCard is full! Cannot add more cards.");
     }
   };
 
@@ -117,9 +147,10 @@ class HandCard {
       for (var i = 1; i < getRandomArbitrary(5,50); i++) {
         const bouncingObject = new BouncingObject(this.Scene, card.x, card.y, 'ball');
       }
+      this.Scene.cardSelected -= 1;
     });
     this.handCards = this.handCards.filter((card) => !card.isSelected);
-    
+    this.deck.discard(destroyedCards)
     /*
     Phaser.Actions.GridAlign(this.handCards, {
       width: this.maximumCards,
@@ -133,21 +164,27 @@ class HandCard {
   }
 }
 
-
-
 class BouncingObject extends Phaser.GameObjects.Sprite {
   constructor(scene, x, y, imageKey) {
     super(scene, x, y, imageKey);
     scene.add.existing(this);
     scene.physics.world.enable(this);
-    this.body.setGravityY(500);
+    this.body.setGravityY(700);
     this.body.setVelocityX(getRandomArbitrary(-500, 500));
-    this.body.setVelocityY(getRandomArbitrary(-500, 500));
+    this.body.setVelocityY(getRandomArbitrary(-300, 300));
+
     this.body.setCollideWorldBounds(true);
-    this.body.setBounce(getRandomArbitrary(0.3, 0.7));
-    this.body.setFriction(0.2);
+    this.body.setBounce(getRandomArbitrary(0.2, 0.5));
+    this.body.setFrictionX(1);
+    this.body.setDrag(0.5);
+
+    this.destroyTimer = this.scene.time.addEvent({
+      delay: getRandomArbitrary(2500, 5500), // 3 seconds in milliseconds
+      callback: this.destroy,
+      callbackScope: this,
+      loop: false,
+    });
   }
-  
 }
 
 function getRandomArbitrary(min, max) {
