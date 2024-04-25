@@ -1,13 +1,13 @@
 class Cards extends Phaser.GameObjects.Sprite {
-  constructor(scene, frame, texture) {
-    super(scene, 0, 0, frame, texture);
+  constructor(scene, x, y, frame, texture) {
+    super(scene, x, y, frame, texture);
     this.isSelected = false;
     this.name = this.frame.name;
     
     const suitsname = [
       "research",
       "wood",
-      "fuel",
+      "crystal",
       "force",
       "food",
       "belief",
@@ -52,7 +52,6 @@ class Cards extends Phaser.GameObjects.Sprite {
       this.isSelected =false
       console.warn("you can't choose more than five cards")
     }
-    console.log(this.scene.cardSelected)
   }
 
   destroy() {
@@ -71,14 +70,23 @@ class Cards extends Phaser.GameObjects.Sprite {
 }
 
 class Deck {
-  
   constructor(scene, frames) {
     this.deck = [];
     this.discardpile = [];
-    for (var i = 1; i < /*frames.length - 1*/10; i++) {
-      const temp = new Cards(scene, "cards", frames[i]);
+    this.scene = scene;
+    this.frame = frames;
+    
+    const startHand = [0, 2, 4, 5, 21, 33, 57, 81]
+
+    for (var i = 0; i < 8; i++) {
+      const temp = new Cards(scene, 0, 0,"cards", frames[startHand[i]]);
       this.deck.push(temp);
     }
+  }
+
+  createCard(num){
+    const temp = new Cards(this.scene, 0, 0, "cards", this.frame[this.frame.indexOf("Cards-" + num + ".png")]);
+    this.discardpile.push(temp);
   }
 
   drawCard() {
@@ -95,7 +103,6 @@ class Deck {
     }
     const card = Phaser.Math.RND.pick(this.deck);
     removeItemOnce(this.deck, card);
-    //console.log(card)
     return card;
   }
 
@@ -129,7 +136,7 @@ class HandCard {
       height: 1,
       cellWidth: 700/this.handCards.length,
       cellHeight: 220,
-      x: 25,
+      x: 50,
       y: this.HandCardPosY,
     });
   }
@@ -152,7 +159,7 @@ class HandCard {
       Phaser.Actions.GridAlign(this.handCards, {
         width: this.maximumCards,
         height: 1,
-        cellWidth: 640/this.handCards.length,
+        cellWidth: 700/this.handCards.length,
         cellHeight: 220,
         x: 50,
         y: this.HandCardPosY,
@@ -164,16 +171,29 @@ class HandCard {
 
   playCard() {
     const destroyedCards = this.handCards.filter((card) => card.isSelected);
+    const frame = this.Scene.textures.get("icons").getFrameNames();
+    const iconName = [
+      "research",
+      "wood",
+      "crystal",
+      "disaster",
+      "food",
+      "belife",
+      "people",
+      "force",
+      "stone",
+    ]
     destroyedCards.forEach((card) => {
       this.container.remove(card);
       card.setVisible(false);
       for (var i = 1; i < getRandomArbitrary(5,50); i++) {
-        const bouncingObject = new BouncingObject(this.Scene, card.x, card.y, 'ball');
+        const bouncingObject = new BouncingObject(this.Scene, card.x, card.y, 'icons', frame[iconName.indexOf(card.suit)]);
       }
       this.Scene.cardSelected -= 1;
     });
     this.handCards = this.handCards.filter((card) => !card.isSelected);
-    this.deck.discard(destroyedCards)
+    this.deck.discard(destroyedCards);
+    this.refillhand();
     /*
     Phaser.Actions.GridAlign(this.handCards, {
       width: this.maximumCards,
@@ -188,8 +208,8 @@ class HandCard {
 }
 
 class BouncingObject extends Phaser.GameObjects.Sprite {
-  constructor(scene, x, y, imageKey) {
-    super(scene, x, y, imageKey);
+  constructor(scene, x, y, imageKey, texture) {
+    super(scene, x, y, imageKey, texture);
     scene.add.existing(this);
     scene.physics.world.enable(this);
     this.body.setGravityY(700);
@@ -222,4 +242,4 @@ function removeItemOnce(arr, value) {
   return arr;
 }
 
-export { Deck, HandCard };
+export { Deck, HandCard, Cards};
