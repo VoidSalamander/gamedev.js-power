@@ -23,10 +23,6 @@ class main extends Phaser.Scene {
     const frames = this.textures.get("cards").getFrameNames();
     this.cardSelected = 0;
 
-    const newThingScene = this.scene.add('gameScene', new getNewThing(null, null, null, () => {
-      // Callback function to remove gameScene
-      this.scene.remove('gameScene');
-    }), { visible: true });
 
     this.maingame = new maingame(this, frames);
 
@@ -36,8 +32,6 @@ class main extends Phaser.Scene {
       "pointerdown",
       () => {
         this.currentSetText.setText(this.maingame.handleplaycard())
-        console.log(this.scene.getStatus("gameScene"))
-        this.scene.remove('gameScene');
       },
       this
     );
@@ -184,8 +178,10 @@ class maingame{
     if (isStraightFlush) {
         return "Straight Flush";
     } else if (isFourOfAKind) {
+        this.HandleFourOfAKind(selectCard[0]);
         return "Four of a Kind";
     } else if (isFullHouse) {
+        this.HandleFullHouse(selectCard);
         return "Full House";
     } else if (isFlushOnly) {
         return "Flush";
@@ -206,6 +202,120 @@ class maingame{
     this.handCard.refillhand();
   }
 
+  getNewCard(suit, face){
+    const suitsname = [
+      "research",
+      "wood",
+      "crystal",
+      "force",
+      "food",
+      "belief",
+      "people",
+      "stone",
+      "disaster",
+    ]
+    if (!suitsname.includes(suit) || face < 1 || face > 13) {
+      console.warn("Invalid suit or face value");
+    }
+    const suitIndex = suitsname.indexOf(suit);
+    this.deck.createCard((suitIndex * 13) + (face - 1))
+  }
+
+  HandleFourOfAKind(card){
+    if (card.face >= this.current_level){
+      this.current_level++;
+      this.Scene.currentLevelText.setText("Current Level: " + this.current_level)
+      this.getNewCard("people" ,this.current_level);
+      this.getNewCard("crystal" ,this.current_level);
+      this.getNewCard("food" ,this.current_level);
+      if(this.current_level %2 === 0){
+        this.getNewCard("wood" ,this.current_level);
+      }else{
+        this.getNewCard("stone" ,this.current_level);
+      }
+    }
+
+  }
+
+  HandleFullHouse(selectCard){
+    this.Scene.scene.add('NewScene',new NewScene(selectCard), this);
+  }
+  
+}
+
+class NewScene extends Phaser.Scene {
+  constructor(selectCard) {
+    super({ key: 'NewScene' });
+    this.selectCard = selectCard
+  }
+
+  preload() {
+    this.load.setBaseURL("../assets/");
+    this.load.atlas(
+      "cards",
+      "carddata.png",
+      "carddata.json"
+    );
+  }
+
+  create() {
+    const frames = this.textures.get("cards").getFrameNames();
+    const buttonWidth = 130; // Assuming a consistent button width (adjust if needed)
+  
+    const buttons = [
+      this.add.image(610, 200, "cards", this.selectCard[0].name).setInteractive(),
+      this.add.image(740, 200, "cards", this.selectCard[1].name).setInteractive(),
+      this.add.image(870, 200, "cards", this.selectCard[2].name).setInteractive(),
+    ];
+  
+    buttons.forEach((button, index) => {
+      button.on('pointerdown', () => {
+        buttons.forEach((btn, idx) => {
+          if (idx === index) {
+            // If the button is selected, scale it up and then destroy
+            this.tweens.add({
+              targets: btn,
+              scaleX: 1.2,
+              scaleY: 1.2,
+              alpha: 0,
+              duration: 700,
+              ease: 'Power2',
+              onComplete: () => {
+                btn.destroy();
+                this.scene.remove();
+              }
+            });
+          } else {
+            // If the button is not selected, simply destroy it
+            btn.destroy();
+          }
+        });
+      });
+    });
+  }
+}
+
+/*
+class getNewThing extends Phaser.Scene {
+  constructor(cardA, cardB, cardC, onCardSelect) {
+    super();
+    this.cardA = cardA
+    this.cardB = cardB
+    this.cardC = cardC
+    this.onCardSelect = onCardSelect;
+  }
+
+  create() {
+    const Abutton = this.add.image(610, 200, "cards", frames[0]);
+    Abutton.setInteractive();
+    Abutton.on("pointerdown", () => this.onCardSelect());
+    
+    const Bbutton = this.add.image(740, 200, "cards", this.cardB.name);
+    Bbutton.setInteractive();
+    Bbutton.on(
+      "pointerdown",
+      () => {
+        this.Scene.scene.remove('gameScene');
       },
       this
     );
@@ -217,9 +327,9 @@ class maingame{
         this.Scene.scene.remove('gameScene');
       },
       this
-    );*/
+    );
   }
-}
+}*/
 
 function isConsecutive(arr) {
   for (let i = 0; i < arr.length - 1; i++) {
