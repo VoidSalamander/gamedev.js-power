@@ -100,7 +100,6 @@ class Deck {
   }
 
   discard(discardcard) {
-    // Handle single card or array of cards for discard
     if (Array.isArray(discardcard)) {
       discardcard.forEach((card) => this.discardpile.push(card));
     } else {
@@ -114,15 +113,16 @@ class HandCard {
     this.Scene = Scene;
     this.maximumCards = 8;
     this.HandCardPosY = 480;
-
+    this.deck = deck;
     this.handCards = [];
 
+    this.container = Scene.add.container(0, 0)
 
     for (var i = 0; i < this.maximumCards; i++) {
-      this.deck = deck;
-      const temp = this.deck.drawCard();
-      this.handCards.push(temp);
-      this.Scene.add.existing(temp);
+      const gameObject = this.Scene.add.existing(this.deck.drawCard());
+      this.container.add(gameObject);
+      gameObject.setVisible(true);
+      this.handCards.push(gameObject);
     }
     Phaser.Actions.GridAlign(this.handCards, {
       width: this.maximumCards,
@@ -135,19 +135,18 @@ class HandCard {
   }
 
   refillhand(){
-    /*
     for (var i = this.handCards.length; i < this.maximumCards; i++) {
       this.getCard();
-    }*/
-    this.getCard();
+    }
   }
 
   getCard = () => {
     if (this.handCards.length < this.maximumCards) {
-      const temp = this.deck.drawCard();
-      console.log(this.handCards);
-      this.handCards.push(temp);
-      this.Scene.add.existing(temp);
+
+      const gameObject = this.Scene.add.existing(this.deck.drawCard());
+      this.container.add(gameObject);
+      gameObject.setVisible(true);
+      this.handCards.push(gameObject);
       
       this.handCards.forEach((card) => (card.isSelected = false));
       Phaser.Actions.GridAlign(this.handCards, {
@@ -166,7 +165,8 @@ class HandCard {
   playCard() {
     const destroyedCards = this.handCards.filter((card) => card.isSelected);
     destroyedCards.forEach((card) => {
-      card.destroy();
+      this.container.remove(card);
+      card.setVisible(false);
       for (var i = 1; i < getRandomArbitrary(5,50); i++) {
         const bouncingObject = new BouncingObject(this.Scene, card.x, card.y, 'ball');
       }
