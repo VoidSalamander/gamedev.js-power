@@ -71,42 +71,55 @@ class Cards extends Phaser.GameObjects.Sprite {
 }
 
 class Deck {
-  deck = [];
-  discardpile = [];
+  
   constructor(scene, frames) {
-    for (var i = 1; i < frames.length - 1; i++) {
+    this.deck = [];
+    this.discardpile = [];
+    for (var i = 1; i < /*frames.length - 1*/10; i++) {
       const temp = new Cards(scene, "cards", frames[i]);
       this.deck.push(temp);
     }
   }
 
   drawCard() {
-    if (!this.deck.length && this.discardpile.length) {
-      this.deck.push(discardpile);
-    } 
-    if (!this.deck.length) {
-      console.warn("deck empty");
-      return null;
-    } else {
-      const temp = Phaser.Math.RND.pick(this.deck);
-      removeItemOnce(this.deck, temp);
-      return temp;
+    if (this.deck.length === 0) {
+      // Check if discard pile has cards before shuffling
+      if (this.discardpile.length > 0) {
+        console.log("Refilling deck from discard pile");
+        this.deck.push(...this.discardpile);
+        this.discardpile = []; // Clear discard pile after shuffling
+      } else {
+        console.warn("Deck and discard pile are empty!");
+        return null;
+      }
     }
+    const card = Phaser.Math.RND.pick(this.deck);
+    removeItemOnce(this.deck, card);
+    //console.log(card)
+    return card;
   }
+
   discard(discardcard) {
-    discardcard.forEach((card) => this.discardpile.push(card))
+    // Handle single card or array of cards for discard
+    if (Array.isArray(discardcard)) {
+      discardcard.forEach((card) => this.discardpile.push(card));
+    } else {
+      this.discardpile.push(discardcard);
+    }
   }
 }
 
 class HandCard {
   constructor(Scene, deck) {
     this.Scene = Scene;
-    this.handCards = [];
     this.maximumCards = 8;
     this.HandCardPosY = 480;
+
+    this.handCards = [];
+
+
     for (var i = 0; i < this.maximumCards; i++) {
       this.deck = deck;
-      this.Scene = Scene;
       const temp = this.deck.drawCard();
       this.handCards.push(temp);
       this.Scene.add.existing(temp);
@@ -121,11 +134,21 @@ class HandCard {
     });
   }
 
+  refillhand(){
+    /*
+    for (var i = this.handCards.length; i < this.maximumCards; i++) {
+      this.getCard();
+    }*/
+    this.getCard();
+  }
+
   getCard = () => {
     if (this.handCards.length < this.maximumCards) {
       const temp = this.deck.drawCard();
+      console.log(this.handCards);
       this.handCards.push(temp);
       this.Scene.add.existing(temp);
+      
       this.handCards.forEach((card) => (card.isSelected = false));
       Phaser.Actions.GridAlign(this.handCards, {
         width: this.maximumCards,

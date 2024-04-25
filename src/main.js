@@ -25,7 +25,6 @@ class main extends Phaser.Scene {
     destroybutton.on(
       "pointerdown",
       () => {
-        
         console.log(this.maingame.handleplaycard())
       },
       this
@@ -33,7 +32,11 @@ class main extends Phaser.Scene {
 
     const addButton = this.add.image(850, 600, "addButton");
     addButton.setInteractive();
-    //addButton.on("pointerdown", handCard.getCard, this);
+    addButton.on(
+      "pointerdown",
+      () => {
+        this.maingame.refillhand()
+      }, this);
 
     this.scene.add('gameScene', gameScene, { visible: true });
   }
@@ -42,7 +45,6 @@ class main extends Phaser.Scene {
 class gameScene extends Phaser.Scene {
   constructor() {
     super();
-    
   }
 
   preload() {
@@ -61,7 +63,6 @@ class maingame{
     this.handCard = new HandCard(Scene, this.deck);
     this.Scene = Scene
     console.log("problem")
-
   }
 
   handleplaycard(){
@@ -121,6 +122,11 @@ class maingame{
         return "High Card";
     }
   }
+
+  refillhand(){
+    this.handCard.refillhand();
+  }
+
 }
 
 function isConsecutive(arr) {
