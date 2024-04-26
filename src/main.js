@@ -114,12 +114,12 @@ class maingame {
 
     /*resource*/
     this.Resource = new Map([
-      ["wood", 0],
-      ["stone", 0],
-      ["food", 0],
-      ["people", 0],
-      ["crystal", 0],
-      ["force", 0],
+      ["wood", 5],
+      ["stone", 5],
+      ["food", 10],
+      ["people", 10],
+      ["crystal", 30],
+      ["force", 1],
       ["belief", 0],
     ]);
     this.ResourceList = [
@@ -139,6 +139,8 @@ class maingame {
   }
 
   handleplaycard() {
+    const selectCard = this.handCard.playCard();
+    const numCards = selectCard.length;
     /*Disater*/
     this.DisasterCount++;
     if (this.DisasterCount === this.DisasterMaximum) {
@@ -148,10 +150,19 @@ class maingame {
     this.Scene.DisasterCountText.setText(
       "Disaster: " + this.DisasterCount + "/" + this.DisasterMaximum
     );
+    const isDisaster = selectCard.some((card) => card.suit === "disaster");
     /*Disater End*/
+    
+    /*Round thing*/
+    this.ResourceModify("crystal", -numCards)
 
-    const selectCard = this.handCard.playCard();
-    const numCards = selectCard.length;
+    
+
+    if(this.Resource.get("crystal") == 0 || this.Resource.get("people") == 0){
+      endgame();
+    }
+
+    /*thing End */
     selectCard.sort((a, b) => a.face - b.face);
     const isFlush = selectCard.every(
       (card) => card.suit === selectCard[0].suit
@@ -191,7 +202,14 @@ class maingame {
 
     // 判斷是否為一對
     const isOnePair = uniqueFaceValues.size === numCards - 3;
-
+    if (isDisaster){
+      this.Scene.HandlemainText(
+        "Disaster has struck: Sorry, this feature is still under development.",
+        "It will currently delete the disaster card along with any other played cards."
+      );
+      console.log("Disaster")
+      return "Disaster";
+    }
     if (isStraightFlush) {
       return "Straight Flush";
     } else if (isFourOfAKind) {
@@ -206,7 +224,7 @@ class maingame {
         "FullHouse!!",
         "You can upgrade one type of card."
       );
-      this.HandleFullHouse(selectCard);
+      this.HandleStraight(selectCard);
       return "Full House";
     } else if (isFlushOnly) {
       this.Scene.HandlemainText(
@@ -274,20 +292,27 @@ class maingame {
   HandleFlush(selectCard) {
     selectCard.forEach((card) => {
       if (this.Resource.has(card.suit)) {
-        this.Resource.set(card.suit, this.Resource.get(card.suit) + card.face);
+        this.ResourceModify(card.suit, card.face)
       }
     });
-    this.Scene.HandleResourceText();
     this.getNewCard(selectCard[0].suit, this.current_level + 1);
   }
 
   HandleStraight(selectCard) {
     selectCard.forEach((card) => {
       if (this.Resource.has(card.suit)) {
-        this.Resource.set(card.suit, this.Resource.get(card.suit) + card.face);
+        this.ResourceModify(card.suit, card.face)
       }
     });
+  }
+
+  ResourceModify(suit, num) {
+    this.Resource.set(suit, this.Resource.get(suit) + num);
     this.Scene.HandleResourceText();
+  }
+
+  endgame(){
+    
   }
 }
 

@@ -119,7 +119,7 @@ class HandCard {
   constructor(Scene, deck) {
     this.Scene = Scene;
     this.maximumCards = 8;
-    this.HandCardPosY = 480;
+    this.HandCardPosY = 500;
     this.deck = deck;
     this.handCards = [];
 
@@ -134,9 +134,9 @@ class HandCard {
     Phaser.Actions.GridAlign(this.handCards, {
       width: this.maximumCards,
       height: 1,
-      cellWidth: 700/this.handCards.length,
+      cellWidth: 600/this.handCards.length,
       cellHeight: 220,
-      x: 50,
+      x: 30,
       y: this.HandCardPosY,
     });
   }
@@ -159,9 +159,9 @@ class HandCard {
       Phaser.Actions.GridAlign(this.handCards, {
         width: this.maximumCards,
         height: 1,
-        cellWidth: 700/this.handCards.length,
+        cellWidth: 600/this.handCards.length,
         cellHeight: 220,
-        x: 50,
+        x: 30,
         y: this.HandCardPosY,
       });
     } else {
@@ -192,17 +192,13 @@ class HandCard {
       this.Scene.cardSelected -= 1;
     });
     this.handCards = this.handCards.filter((card) => !card.isSelected);
-    this.deck.discard(destroyedCards);
+    
+    const isDisaster = destroyedCards.some((card) => card.suit === "disaster");
+    if(!isDisaster){
+      this.deck.discard(destroyedCards);
+    }
+   
     this.refillhand();
-    /*
-    Phaser.Actions.GridAlign(this.handCards, {
-      width: this.maximumCards,
-      height: 1,
-      cellWidth: 640/this.handCards.length,
-      cellHeight: 220,
-      x: 50,
-      y: this.HandCardPosY,
-    });*/
     return destroyedCards;
   }
 }
